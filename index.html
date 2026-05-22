@@ -7,7 +7,7 @@
 
 <style>
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     margin: 20px;
 }
 
@@ -26,13 +26,20 @@ body {
 .correct { color: green; }
 .incorrect { color: red; }
 
+.pagination {
+    margin-top: 20px;
+}
+
 .pagination button {
     margin: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
 }
 
 .active {
     background: blue;
     color: white;
+    font-weight: bold;
 }
 
 pre {
@@ -54,53 +61,51 @@ pre {
 <div id="pagination"></div>
 
 <script>
-
 let currentPage = 1;
 const questionsPerPage = 50;
 let allQuestions = [];
 
 async function loadTest() {
-    const response = await fetch('test.txt');
-    const text = await response.text();
+    try {
+        const response = await fetch('test.txt');
+        const text = await response.text();
 
-    // ✅ НОВЫЙ ФОРМАТ БЕЗ ~~
-    allQuestions = text
-        .split('\n')
-        .reduce((acc, line) => {
-            line = line.trim();
+        allQuestions = text
+            .split('\n')
+            .reduce((acc, line) => {
+                line = line.trim();
+                if (!line) return acc;
 
-            if (!line) return acc;
+                if (line.startsWith('?')) {
+                    acc.push(line);
+                } else if (acc.length > 0) {
+                    acc[acc.length - 1] += '\n' + line;
+                }
+                return acc;
+            }, [])
+            .filter(q => q.length > 0);
 
-            if (line.startsWith('?')) {
-                acc.push(line);
-            } else if (acc.length > 0) {
-                acc[acc.length - 1] += '\n' + line;
-            }
-
-            return acc;
-        }, [])
-        .filter(q => q.length > 0);
-
-    renderPage(currentPage);
-    renderPagination();
+        renderPage(currentPage);
+        renderPagination();
+    } catch (error) {
+        console.error("Тест файлын жүктеу мүмкін болмады:", error);
+        document.getElementById('quiz').innerHTML = '<p style="color:red;">Қате: test.txt файлы табылмады немесе жүктелмеді.</p>';
+    }
 }
 
 function renderPage(page) {
     const start = (page - 1) * questionsPerPage;
     const end = page * questionsPerPage;
-
     const pageQuestions = allQuestions.slice(start, end);
 
     renderCustomQuestions(pageQuestions, start);
 }
 
 function renderCustomQuestions(questionsArray, globalStartIndex = 0) {
-
     const quiz = document.getElementById('quiz');
     quiz.innerHTML = '';
 
     questionsArray.forEach((block, index) => {
-
         const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
 
         let question = '';
@@ -121,7 +126,6 @@ function renderCustomQuestions(questionsArray, globalStartIndex = 0) {
 
         const isMulti = correctValues.length > 1;
         const shuffled = shuffle([...variants]);
-
         const qIndex = globalStartIndex + index;
 
         const div = document.createElement('div');
@@ -136,23 +140,17 @@ function renderCustomQuestions(questionsArray, globalStartIndex = 0) {
         result.id = 'result' + qIndex;
 
         shuffled.forEach((v) => {
-
             const label = document.createElement('label');
             label.className = 'variant';
 
             const input = document.createElement('input');
-
             input.type = isMulti ? 'checkbox' : 'radio';
             input.name = 'q' + qIndex;
             input.value = v;
 
             input.addEventListener('change', () => {
-
-                const selectedInputs =
-                    document.querySelectorAll(`input[name="q${qIndex}"]:checked`);
-
-                const selectedValues =
-                    Array.from(selectedInputs).map(i => i.value);
+                const selectedInputs = document.querySelectorAll(`input[name="q${qIndex}"]:checked`);
+                const selectedValues = Array.from(selectedInputs).map(i => i.value);
 
                 if (!isMulti) {
                     checkAnswer(qIndex, selectedValues, correctValues);
@@ -168,7 +166,6 @@ function renderCustomQuestions(questionsArray, globalStartIndex = 0) {
 
             label.appendChild(input);
             label.appendChild(document.createTextNode(' ' + v));
-
             div.appendChild(label);
         });
 
@@ -188,24 +185,22 @@ function checkAnswer(qIndex, selectedValues, correctValues) {
         result.textContent = 'Дұрыс ✅';
         result.className = 'correct';
     } else {
-        result.innerHTML = `
-            Қате ❌<br>
-            Дұрыс жауаптар: <b>${correctValues.join(', ')}</b>
-        `;
+        result.innerHTML = `Қате ❌<br>Дұрыс жауаптар: <b>${correctValues.join(', ')}</b>`;
         result.className = 'incorrect';
     }
 }
 
 function showAllAnswers() {
     const questions = document.querySelectorAll('.question');
+    // Вычисляем правильный индекс для текущей страницы
+    const startIndex = (currentPage - 1) * questionsPerPage;
 
     questions.forEach((q, index) => {
-
-        const block = allQuestions[index];
+        const globalIndex = startIndex + index;
+        const block = allQuestions[globalIndex];
         if (!block) return;
 
         const lines = block.split('\n').map(l => l.trim());
-
         let correctValues = [];
 
         lines.forEach(line => {
@@ -217,13 +212,14 @@ function showAllAnswers() {
         const inputs = q.querySelectorAll('input');
 
         inputs.forEach(inp => {
+            inp.disabled = true; // Блокируем инпуты после показа ответов
             if (correctValues.includes(inp.value)) {
                 inp.parentElement.style.color = 'green';
                 inp.parentElement.style.fontWeight = 'bold';
             }
         });
 
-        const resultDiv = document.getElementById('result' + index);
+        const resultDiv = document.getElementById('result' + globalIndex);
         if (resultDiv) {
             resultDiv.innerHTML = `✔ Дұрыс жауап: <b>${correctValues.join(', ')}</b>`;
             resultDiv.className = 'correct';
@@ -288,11 +284,11 @@ function renderPagination() {
 }
 
 function resetAll() {
+    currentPage = 1; // Возвращаемся на первую страницу при сбросе
     loadTest();
 }
 
 loadTest();
-
 </script>
 
 </body>
