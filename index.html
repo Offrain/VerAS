@@ -1,3 +1,74 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тест жүйесі</title>
+
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+
+.question {
+    margin-bottom: 25px;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.variant {
+    display: block;
+    margin: 5px 0;
+    cursor: pointer;
+}
+
+.correct { color: green; }
+.incorrect { color: red; }
+
+.pagination { margin-top: 20px; }
+
+.pagination button {
+    margin: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.active {
+    background: blue;
+    color: white;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="auth">
+  <h2>Кіру</h2>
+
+  <input id="email" placeholder="email"><br><br>
+  <input id="pass" type="password" placeholder="password"><br><br>
+
+  <button onclick="login()">Кіру</button>
+  <button onclick="register()">Тіркелу</button>
+
+  <p id="msg"></p>
+</div>
+
+<!-- 🔥 APP (ТВОЙ ТЕСТ) -->
+<div id="app" style="display:none;">
+
+<h1>Тест</h1>
+
+<button onclick="shuffleQuestions()">Барлық сұрақтарды араластыру</button>
+<button onclick="shuffleCurrentPage()">Осы беттегі сұрақтарды араластыру</button>
+<button onclick="resetAll()">Қайта бастау</button>
+<button onclick="showAllAnswers()">Жауап көрсету</button>
+
+<div id="quiz"></div>
+<div id="pagination"></div>
+
+</div>
+  
 <script type="module">
 
 /* ================= FIREBASE ================= */
