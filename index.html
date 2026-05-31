@@ -131,6 +131,25 @@ function hideApp() {
   document.getElementById("auth").style.display = "block";
   document.getElementById("app").style.display = "none";
 }
+    
+/* ================= ANTI-CHEAT ================= */
+document.addEventListener("copy", (e) => {
+  e.preventDefault();
+});
+
+document.addEventListener("selectstart", (e) => {
+  e.preventDefault();
+});
+
+ document.addEventListener("keydown", (e) => {
+  if (
+    (e.ctrlKey && e.key === "c") ||
+    (e.ctrlKey && e.key === "a") ||
+    (e.ctrlKey && e.key === "u")
+  ) {
+    e.preventDefault();
+  }
+});
 
 /* ================= REGISTER ================= */
 window.register = async function () {
